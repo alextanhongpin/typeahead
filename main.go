@@ -9,6 +9,7 @@ import (
 	"os"
 	"runtime/pprof"
 	"strings"
+	"time"
 )
 
 type Node struct {
@@ -98,7 +99,9 @@ func insert(root *Node, key []byte, value interface{}) {
 		// if bytes.HasPrefix(key, nextEdge.key) {
 		// fmt.Println(string(key), string(nextEdge.key), p)
 		root.edges[pos].count++
-		insert(&(root.edges[pos].node), key[p:], value)
+		node := root.edges[pos].node
+		insert(&node, key[p:], value)
+		root.edges[pos].node = node
 		return
 	}
 	split(key, p, pos, root)
@@ -126,9 +129,9 @@ func split(key []byte, pos, p int, root *Node) {
 	root.edges = append(root.edges, newEdge)
 }
 
-func find(root *Node, key []byte) {
+func find(root *Node, key []byte) [][]byte {
 	if len(key) == 0 {
-		return
+		return nil
 	}
 	var foundElements int
 	traverseNode := root
@@ -149,16 +152,18 @@ func find(root *Node, key []byte) {
 		traverseNode = &(nextEdge.node)
 	}
 	if traverseNode == nil || traverseNode.IsLeaf() {
-		return
+		return nil
 	}
+	var result [][]byte
 	for _, edge := range traverseNode.edges {
 		func(in []byte) {
 			out := append(key, in...)
-			fmt.Printf("%s\n", out)
-			find(root, out)
-
+			// fmt.Printf("%s\n", out)
+			result = append(result, out)
+			result = append(result, find(root, out)...)
 		}(edge.key)
 	}
+	return result
 }
 
 func main() {
@@ -211,7 +216,12 @@ func main() {
 				continue
 			}
 			fmt.Printf("searching for %s:\n", b)
-			find(&root, b)
+			start := time.Now()
+			result := find(&root, b)
+			fmt.Printf("found %d results in %s\n", len(result), time.Since(start))
+			for _, r := range result {
+				fmt.Println(string(r))
+			}
 			fmt.Println()
 		}
 		if err := reader.Err(); err != nil {
