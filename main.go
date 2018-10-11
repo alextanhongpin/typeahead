@@ -127,6 +127,9 @@ func split(key []byte, pos, p int, root *Node) {
 }
 
 func find(root *Node, key []byte) {
+	if len(key) == 0 {
+		return
+	}
 	var foundElements int
 	traverseNode := root
 	for traverseNode != nil && !traverseNode.IsLeaf() && foundElements < len(key) {
@@ -139,6 +142,7 @@ func find(root *Node, key []byte) {
 			break
 		}
 		if nextEdge == nil {
+			traverseNode = nil
 			break
 		}
 		foundElements += len(nextEdge.key)
@@ -202,7 +206,10 @@ func main() {
 		fmt.Println("Enter a search keyword:")
 		reader := bufio.NewScanner(os.Stdin)
 		for reader.Scan() {
-			b := reader.Bytes()
+			b := bytes.TrimSpace(reader.Bytes())
+			if len(b) == 0 {
+				continue
+			}
 			fmt.Printf("searching for %s:\n", b)
 			find(&root, b)
 			fmt.Println()
