@@ -33,10 +33,11 @@ func (n Node) Print(depth int) {
 }
 
 type Edge struct {
-	count int
-	key   []byte
-	value interface{}
-	node  Node
+	count   int
+	key     []byte
+	value   interface{}
+	node    Node
+	endword bool
 }
 
 func NewEdge(key []byte, value interface{}) Edge {
@@ -46,6 +47,10 @@ func NewEdge(key []byte, value interface{}) Edge {
 		count: 1,
 		node:  NewNode(),
 	}
+}
+
+func (e Edge) String() string {
+	return string(e.key)
 }
 
 func min(x, y int) int {
@@ -87,18 +92,20 @@ func insert(root *Node, key []byte, value interface{}) {
 		break
 	}
 	if p == 0 {
-		root.edges = append(root.edges, NewEdge(key, value))
+		edge := NewEdge(key, value)
+		edge.endword = true
+		root.edges = append(root.edges, edge)
 		return
 	}
 	nextEdge := root.edges[pos]
 	if bytes.Equal(nextEdge.key, key) {
 		root.edges[pos].count++
+		root.edges[pos].endword = true
 		return
 	}
 	if len(nextEdge.key) == p {
-		// if bytes.HasPrefix(key, nextEdge.key) {
-		// fmt.Println(string(key), string(nextEdge.key), p)
 		root.edges[pos].count++
+		root.edges[pos].endword = true
 		node := root.edges[pos].node
 		insert(&node, key[p:], value)
 		root.edges[pos].node = node
@@ -121,6 +128,7 @@ func split(root *Node, key []byte, p, pos int) {
 
 	newEdge := NewEdge(prefix, nil)
 	newEdge.count += edge.count
+	newEdge.endword = true
 
 	edge.key = left
 
@@ -135,27 +143,29 @@ func find(root *Node, in []byte) map[string]bool {
 	}
 
 	result := make(map[string]bool)
-	queue := make([][]byte, 0)
-	queue = append(queue, in)
-	var key []byte
+	queue := make([]Edge, 0)
+	queue = append(queue, NewEdge(in, nil))
 	for len(queue) > 0 {
+		var key Edge
+		var foundKey []byte
 		key, queue = queue[0], queue[1:]
-		if valid, found := result[string(key)]; found || valid {
+		if _, found := result[key.String()]; found {
+			// result[key.String()] = key.endword
 			continue
 		} else {
-			result[string(key)] = found
+			result[key.String()] = false
 		}
+		foundKey = make([]byte, len(key.key))
+		copy(foundKey, key.key)
+		// if key.endword {
+		//         result[key.String()] = true
+		// }
 		var foundElements int
-
-		var foundKey []byte
-		foundKey = make([]byte, len(key))
-		copy(foundKey, key)
 		traverseNode := root
-
-		for traverseNode != nil && !traverseNode.IsLeaf() && foundElements < len(key) {
+		for traverseNode != nil && !traverseNode.IsLeaf() && foundElements < len(foundKey) {
 			var nextEdge *Edge
 			for _, edge := range traverseNode.edges {
-				if bytes.HasPrefix(key[foundElements:], edge.key) {
+				if bytes.HasPrefix(foundKey[foundElements:], edge.key) {
 					nextEdge = &edge
 					break
 				}
@@ -171,15 +181,16 @@ func find(root *Node, in []byte) map[string]bool {
 			continue
 		}
 		for _, edge := range traverseNode.edges {
-			func(edge Edge) {
+			func(key, edge Edge) {
 				out := append(foundKey, edge.key...)
 				if _, found := result[string(out)]; !found {
-					queue = append([][]byte{out}, queue...)
+					queue = append([]Edge{NewEdge(out, nil)}, queue...)
 				}
+
 				if edge.node.IsLeaf() {
-					result[string(out)] = true
+					result[string(out)] = edge.node.IsLeaf()
 				}
-			}(edge)
+			}(key, edge)
 		}
 	}
 	return result
@@ -208,23 +219,44 @@ func main() {
 	}
 	defer f.Close()
 
-	scanner := bufio.NewScanner(f)
-	var count int
-	for scanner.Scan() {
-		count++
-		b := bytes.ToLower(scanner.Bytes())
-		/* if bytes.HasPrefix(b, []byte("alex")) { */
-		/*         fmt.Println(string(b)) */
-		/*         iii++ */
-		/* } */
-		insert(&root, b, nil)
-	}
-	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println("Dictionary has", count, "results")
-
-	// root.Print(0)
+	// scanner := bufio.NewScanner(f)
+	// var count int
+	// for scanner.Scan() {
+	//         count++
+	//         b := bytes.ToLower(scanner.Bytes())
+	//         insert(&root, b, nil)
+	// }
+	// if err := scanner.Err(); err != nil {
+	//         log.Fatal(err)
+	// }
+	// fmt.Println("Dictionary has", count, "results")
+	insert(&root, []byte("alex"), nil)
+	insert(&root, []byte("alexander"), nil)
+	insert(&root, []byte("alexanders"), nil)
+	insert(&root, []byte("alexandra"), nil)
+	insert(&root, []byte("alexandreid"), nil)
+	insert(&root, []byte("alexandrian"), nil)
+	insert(&root, []byte("alexandrianism"), nil)
+	insert(&root, []byte("alexandrina"), nil)
+	insert(&root, []byte("alexandrine"), nil)
+	insert(&root, []byte("alexandrite"), nil)
+	insert(&root, []byte("alexas"), nil)
+	insert(&root, []byte("alexia"), nil)
+	insert(&root, []byte("alexia"), nil)
+	insert(&root, []byte("alexian"), nil)
+	insert(&root, []byte("alexic"), nil)
+	insert(&root, []byte("alexin"), nil)
+	insert(&root, []byte("alexinic"), nil)
+	insert(&root, []byte("alexipharmacon"), nil)
+	insert(&root, []byte("alexipharmacum"), nil)
+	insert(&root, []byte("alexipharmic"), nil)
+	insert(&root, []byte("alexipharmical"), nil)
+	insert(&root, []byte("alexipyretic"), nil)
+	insert(&root, []byte("alexis"), nil)
+	insert(&root, []byte("alexiteric"), nil)
+	insert(&root, []byte("alexiterical"), nil)
+	insert(&root, []byte("alexius"), nil)
+	root.Print(0)
 	if *memprofile != "" {
 		memfile, err := os.Create(*memprofile)
 		if err != nil {
@@ -250,8 +282,8 @@ func main() {
 			for r, endWord := range result {
 				if endWord {
 					count++
-					fmt.Println(r)
 				}
+				fmt.Println(r, endWord)
 			}
 			fmt.Printf("found %d results in %s\n", count, time.Since(start))
 			fmt.Println()

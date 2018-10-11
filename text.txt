@@ -25,21 +25,21 @@ alexiteric
 alexiterical
 alexius
 
-alexanders
-alexandra
-alexandreid
-alexandrianism
-alexandrina
-alexandrine
-alexandrite
-alexas
-alexian
-alexic
-alexinic
-alexipharmacon
-alexipharmacum
-alexipharmical
-alexipyretic
-alexis
-alexiterical
-alexius
+alexanders true
+alexandra true
+alexandreid true
+alexandrianism true
+alexandrina true
+alexandrine true
+alexandrite true
+alexas true
+alexian true
+alexic true
+alexinic true
+alexipharmacon true
+alexipharmacum true
+alexipharmical true
+alexipyretic true
+alexis true
+alexiterical true
+alexius true
