@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -121,9 +122,6 @@ func split(key []byte, pos, p int, root *Node) {
 	edge.key = left
 
 	insert(&(newEdge.node), right, "")
-	// if newEdge.node == nil {
-	//         newEdge.node = make([]Edge, 0)
-	// }
 	newEdge.node.edges = append(newEdge.node.edges, edge)
 	root.edges = append(root.edges, newEdge)
 }
@@ -151,23 +149,29 @@ func find(root *Node, key []byte) {
 	}
 	for _, edge := range traverseNode.edges {
 		func(in []byte) {
-			out := make([]byte, len(key))
-			copy(out, key)
-			out = append(out, in...)
-			fmt.Printf("%s %s\n", out, in)
+			out := append(key, in...)
+			fmt.Printf("%s\n", out)
 			find(root, out)
+
 		}(edge.key)
 	}
 }
 
-// TODO: lowercase the characters.
 func main() {
-	cpufile, err := os.Create("cpuprofile")
-	if err != nil {
-		log.Fatal(err)
+	var (
+		cpuprofile  = flag.String("cpu", "", "The file to output the cpu profiling, e.g. cpu.out")
+		memprofile  = flag.String("mem", "", "The file to output the memory profiling, e.g. mem.out")
+		interactive = flag.Bool("i", false, "Whether to allow interactive mode or not")
+	)
+	flag.Parse()
+	if *cpuprofile != "" {
+		cpufile, err := os.Create(*cpuprofile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		pprof.StartCPUProfile(cpufile)
+		defer pprof.StopCPUProfile()
 	}
-	pprof.StartCPUProfile(cpufile)
-	defer pprof.StopCPUProfile()
 
 	root := NewNode()
 	f, err := os.Open("/usr/share/dict/words")
@@ -177,38 +181,34 @@ func main() {
 	defer f.Close()
 
 	scanner := bufio.NewScanner(f)
-	// var i int
 	for scanner.Scan() {
-		// i++
-		// if i > 50 {
-		//         break
-		// }
-		b := scanner.Bytes()
-		// fmt.Println(string(b))
-		insert(&root, bytes.ToLower(b), nil)
+		insert(&root, bytes.ToLower(scanner.Bytes()), nil)
 	}
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
 
-	find(&root, []byte("abac"))
 	// root.Print(0)
-
-	memfile, err := os.Create("memprofile")
-	if err != nil {
-		log.Fatal(err)
+	if *memprofile != "" {
+		memfile, err := os.Create(*memprofile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		pprof.WriteHeapProfile(memfile)
+		memfile.Close()
 	}
-	pprof.WriteHeapProfile(memfile)
-	memfile.Close()
 
-	// reader := bufio.NewScanner(os.Stdin)
-	// defer reader.Close()
-	// for reader.Scan() {
-	//         b := reader.Bytes()
-	//         fmt.Printf("searching for %s\n", b)
-	//         find(&root, b)
-	// }
-	// if err := reader.Err(); err != nil {
-	//         log.Fatal(err)
-	// }
+	if *interactive {
+		fmt.Println("Enter a search keyword:")
+		reader := bufio.NewScanner(os.Stdin)
+		for reader.Scan() {
+			b := reader.Bytes()
+			fmt.Printf("searching for %s:\n", b)
+			find(&root, b)
+			fmt.Println()
+		}
+		if err := reader.Err(); err != nil {
+			log.Fatal(err)
+		}
+	}
 }
