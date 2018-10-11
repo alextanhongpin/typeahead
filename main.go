@@ -104,12 +104,12 @@ func insert(root *Node, key []byte, value interface{}) {
 		root.edges[pos].node = node
 		return
 	}
-	split(key, p, pos, root)
+	split(root, key, p, pos)
 }
 
-func split(key []byte, pos, p int, root *Node) {
+func split(root *Node, key []byte, p, pos int) {
 	var rem int
-	edge := root.edges[p]
+	edge := root.edges[pos]
 	for k, v := range root.edges {
 		if bytes.Equal(v.key, edge.key) {
 			rem = k
@@ -117,51 +117,70 @@ func split(key []byte, pos, p int, root *Node) {
 		}
 	}
 	root.edges = append(root.edges[:rem], root.edges[rem+1:]...)
-	prefix, left, right := edge.key[:pos], edge.key[pos:], key[pos:]
+	prefix, left, right := edge.key[:p], edge.key[p:], key[p:]
 
-	newEdge := NewEdge(prefix, "")
+	newEdge := NewEdge(prefix, nil)
 	newEdge.count += edge.count
 
 	edge.key = left
 
-	insert(&(newEdge.node), right, "")
+	insert(&(newEdge.node), right, nil)
 	newEdge.node.edges = append(newEdge.node.edges, edge)
 	root.edges = append(root.edges, newEdge)
 }
 
-func find(root *Node, key []byte) [][]byte {
-	if len(key) == 0 {
+func find(root *Node, in []byte) map[string]bool {
+	if len(in) == 0 {
 		return nil
 	}
-	var foundElements int
-	traverseNode := root
-	for traverseNode != nil && !traverseNode.IsLeaf() && foundElements < len(key) {
-		var nextEdge *Edge
-		for _, edge := range traverseNode.edges {
-			if len(edge.key) == 0 || edge.key[0] != key[foundElements] {
-				continue
+
+	result := make(map[string]bool)
+	queue := make([][]byte, 0)
+	queue = append(queue, in)
+	var key []byte
+	for len(queue) > 0 {
+		key, queue = queue[0], queue[1:]
+		if valid, found := result[string(key)]; found || valid {
+			continue
+		} else {
+			result[string(key)] = found
+		}
+		var foundElements int
+
+		var foundKey []byte
+		foundKey = make([]byte, len(key))
+		copy(foundKey, key)
+		traverseNode := root
+
+		for traverseNode != nil && !traverseNode.IsLeaf() && foundElements < len(key) {
+			var nextEdge *Edge
+			for _, edge := range traverseNode.edges {
+				if bytes.HasPrefix(key[foundElements:], edge.key) {
+					nextEdge = &edge
+					break
+				}
 			}
-			nextEdge = &edge
-			break
+			if nextEdge == nil {
+				traverseNode = nil
+				break
+			}
+			foundElements += len(nextEdge.key)
+			traverseNode = &(nextEdge.node)
 		}
-		if nextEdge == nil {
-			traverseNode = nil
-			break
+		if traverseNode == nil || traverseNode.IsLeaf() {
+			continue
 		}
-		foundElements += len(nextEdge.key)
-		traverseNode = &(nextEdge.node)
-	}
-	if traverseNode == nil || traverseNode.IsLeaf() {
-		return nil
-	}
-	var result [][]byte
-	for _, edge := range traverseNode.edges {
-		func(in []byte) {
-			out := append(key, in...)
-			// fmt.Printf("%s\n", out)
-			result = append(result, out)
-			result = append(result, find(root, out)...)
-		}(edge.key)
+		for _, edge := range traverseNode.edges {
+			func(edge Edge) {
+				out := append(foundKey, edge.key...)
+				if _, found := result[string(out)]; !found {
+					queue = append([][]byte{out}, queue...)
+				}
+				if edge.node.IsLeaf() {
+					result[string(out)] = true
+				}
+			}(edge)
+		}
 	}
 	return result
 }
@@ -190,12 +209,20 @@ func main() {
 	defer f.Close()
 
 	scanner := bufio.NewScanner(f)
+	var count int
 	for scanner.Scan() {
-		insert(&root, bytes.ToLower(scanner.Bytes()), nil)
+		count++
+		b := bytes.ToLower(scanner.Bytes())
+		/* if bytes.HasPrefix(b, []byte("alex")) { */
+		/*         fmt.Println(string(b)) */
+		/*         iii++ */
+		/* } */
+		insert(&root, b, nil)
 	}
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
+	fmt.Println("Dictionary has", count, "results")
 
 	// root.Print(0)
 	if *memprofile != "" {
@@ -218,10 +245,15 @@ func main() {
 			fmt.Printf("searching for %s:\n", b)
 			start := time.Now()
 			result := find(&root, b)
+			var count int
 			fmt.Printf("found %d results in %s\n", len(result), time.Since(start))
-			for _, r := range result {
-				fmt.Println(string(r))
+			for r, endWord := range result {
+				if endWord {
+					count++
+					fmt.Println(r)
+				}
 			}
+			fmt.Printf("found %d results in %s\n", count, time.Since(start))
 			fmt.Println()
 		}
 		if err := reader.Err(); err != nil {
