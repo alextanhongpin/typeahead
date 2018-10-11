@@ -105,7 +105,7 @@ func insert(root *Node, key []byte, value interface{}) {
 	}
 	if len(nextEdge.key) == p {
 		root.edges[pos].count++
-		root.edges[pos].endword = true
+		// root.edges[pos].endword = true
 		node := root.edges[pos].node
 		insert(&node, key[p:], value)
 		root.edges[pos].node = node
@@ -128,7 +128,7 @@ func split(root *Node, key []byte, p, pos int) {
 
 	newEdge := NewEdge(prefix, nil)
 	newEdge.count += edge.count
-	newEdge.endword = true
+	// newEdge.endword = true
 
 	edge.key = left
 
@@ -137,24 +137,24 @@ func split(root *Node, key []byte, p, pos int) {
 	root.edges = append(root.edges, newEdge)
 }
 
-func find(root *Node, in []byte) map[string]bool {
+func find(root *Node, in []byte) map[string]Edge {
 	if len(in) == 0 {
 		return nil
 	}
 
-	result := make(map[string]bool)
+	result := make(map[string]Edge)
 	queue := make([]Edge, 0)
 	queue = append(queue, NewEdge(in, nil))
 	for len(queue) > 0 {
 		var key Edge
 		var foundKey []byte
 		key, queue = queue[0], queue[1:]
-		if _, found := result[key.String()]; found {
-			// result[key.String()] = key.endword
-			continue
-		} else {
-			result[key.String()] = false
-		}
+		// if _, found := result[key.String()]; found {
+		//         // result[key.String()] = key.endword
+		//         // continue
+		// } else {
+		//         result[key.String()] = key
+		// }
 		foundKey = make([]byte, len(key.key))
 		copy(foundKey, key.key)
 		// if key.endword {
@@ -183,13 +183,13 @@ func find(root *Node, in []byte) map[string]bool {
 		for _, edge := range traverseNode.edges {
 			func(key, edge Edge) {
 				out := append(foundKey, edge.key...)
-				if _, found := result[string(out)]; !found {
-					queue = append([]Edge{NewEdge(out, nil)}, queue...)
-				}
+				// if _, found := result[string(out)]; !found {
+				queue = append([]Edge{NewEdge(out, nil)}, queue...)
+				result[string(out)] = edge
+				// }
 
-				if edge.node.IsLeaf() {
-					result[string(out)] = edge.node.IsLeaf()
-				}
+				// if edge.node.IsLeaf() {
+				// }
 			}(key, edge)
 		}
 	}
@@ -219,44 +219,22 @@ func main() {
 	}
 	defer f.Close()
 
-	// scanner := bufio.NewScanner(f)
-	// var count int
-	// for scanner.Scan() {
-	//         count++
-	//         b := bytes.ToLower(scanner.Bytes())
-	//         insert(&root, b, nil)
-	// }
-	// if err := scanner.Err(); err != nil {
-	//         log.Fatal(err)
-	// }
-	// fmt.Println("Dictionary has", count, "results")
-	insert(&root, []byte("alex"), nil)
-	insert(&root, []byte("alexander"), nil)
-	insert(&root, []byte("alexanders"), nil)
-	insert(&root, []byte("alexandra"), nil)
-	insert(&root, []byte("alexandreid"), nil)
-	insert(&root, []byte("alexandrian"), nil)
-	insert(&root, []byte("alexandrianism"), nil)
-	insert(&root, []byte("alexandrina"), nil)
-	insert(&root, []byte("alexandrine"), nil)
-	insert(&root, []byte("alexandrite"), nil)
-	insert(&root, []byte("alexas"), nil)
-	insert(&root, []byte("alexia"), nil)
-	insert(&root, []byte("alexia"), nil)
-	insert(&root, []byte("alexian"), nil)
-	insert(&root, []byte("alexic"), nil)
-	insert(&root, []byte("alexin"), nil)
-	insert(&root, []byte("alexinic"), nil)
-	insert(&root, []byte("alexipharmacon"), nil)
-	insert(&root, []byte("alexipharmacum"), nil)
-	insert(&root, []byte("alexipharmic"), nil)
-	insert(&root, []byte("alexipharmical"), nil)
-	insert(&root, []byte("alexipyretic"), nil)
-	insert(&root, []byte("alexis"), nil)
-	insert(&root, []byte("alexiteric"), nil)
-	insert(&root, []byte("alexiterical"), nil)
-	insert(&root, []byte("alexius"), nil)
-	root.Print(0)
+	scanner := bufio.NewScanner(f)
+	var count int
+	var ii int
+	for scanner.Scan() {
+		count++
+		b := bytes.ToLower(scanner.Bytes())
+		if bytes.HasPrefix(b, []byte("paper")) {
+			ii++
+		}
+		insert(&root, b, nil)
+	}
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("Dictionary has", count, "results", ii)
+	// root.Print(0)
 	if *memprofile != "" {
 		memfile, err := os.Create(*memprofile)
 		if err != nil {
@@ -279,11 +257,11 @@ func main() {
 			result := find(&root, b)
 			var count int
 			fmt.Printf("found %d results in %s\n", len(result), time.Since(start))
-			for r, endWord := range result {
-				if endWord {
+			for r, edge := range result {
+				if edge.endword {
+					fmt.Println(r)
 					count++
 				}
-				fmt.Println(r, endWord)
 			}
 			fmt.Printf("found %d results in %s\n", count, time.Since(start))
 			fmt.Println()
