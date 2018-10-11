@@ -18,9 +18,11 @@ func TestRadix(t *testing.T) {
 			fmt.Println(string(root.edges[0].key))
 			return false
 		}
-		if ok := bytes.Equal(in, out[0]); !ok {
-			fmt.Println(string(in))
-			return false
+		for _, v := range out {
+			if ok := bytes.Equal(in, v.key); !ok {
+				fmt.Println(string(in))
+				return false
+			}
 		}
 		return true
 	}
