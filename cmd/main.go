@@ -68,11 +68,16 @@ func main() {
 			}
 			fmt.Printf("searching for %s:\n", b)
 			start := time.Now()
-			result := root.Find(b)
+			// result := root.Find(b)
+			result := root.FindRecursive(b)
 			var count int
 			fmt.Printf("found %d results in %s\n", len(result), time.Since(start))
-			for r, _ := range result {
-				fmt.Println(r)
+			// for r, _ := range result {
+			//         fmt.Println(r)
+			//         count++
+			// }
+			for _, b := range result {
+				fmt.Println(string(b))
 				count++
 			}
 			fmt.Printf("found %d results in %s\n", count, time.Since(start))
