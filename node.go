@@ -7,7 +7,7 @@ import (
 
 // Node holds an array of edge.
 type Node struct {
-	edges []Edge
+	Edges []Edge
 }
 
 // NewNode returns a new node value.
@@ -17,14 +17,14 @@ func NewNode() Node {
 
 // IsLeaf returns true if the node does not have any edges.
 func (n Node) IsLeaf() bool {
-	return len(n.edges) == 0
+	return len(n.Edges) == 0
 }
 
 // Print iteratively prints all the node edges.
 func (n Node) Print(depth int) {
-	for _, edge := range n.edges {
-		key, count := edge.key, edge.count
+	for _, edge := range n.Edges {
+		key, count := edge.Key, edge.Count
 		fmt.Printf("%s %s:%d\n", strings.Repeat(" ", depth*2), key, count)
-		edge.node.Print(depth + 1)
+		edge.Node.Print(depth + 1)
 	}
 }

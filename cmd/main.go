@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"encoding/gob"
 	"flag"
 	"fmt"
 	"log"
@@ -18,6 +19,9 @@ func main() {
 		cpuprofile  = flag.String("cpu", "", "The file to output the cpu profiling, e.g. cpu.out")
 		memprofile  = flag.String("mem", "", "The file to output the memory profiling, e.g. mem.out")
 		interactive = flag.Bool("i", false, "Whether to allow interactive mode or not")
+		source      = flag.String("source", "", "the default dictionary to load")
+		in          = flag.String("in", "", "the file that stores the struct")
+		out         = flag.String("out", "", "the destination to store the file to")
 	)
 	flag.Parse()
 	if *cpuprofile != "" {
@@ -30,24 +34,66 @@ func main() {
 	}
 
 	root := ahead.New()
-	f, err := os.Open("/usr/share/dict/words")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer f.Close()
 
-	scanner := bufio.NewScanner(f)
-	var count, words int
-	for scanner.Scan() {
-		b := bytes.ToLower(scanner.Bytes())
-		words++
-		count += len(b)
-		root.Insert(b, nil)
+	if *in != "" {
+		var f *os.File
+		_, err := os.Stat(*in)
+		if os.IsNotExist(err) {
+			f, err = os.Create(*in)
+		} else {
+			f, err = os.Open(*in)
+		}
+		if err != nil {
+			log.Fatal(err)
+		}
+		dec := gob.NewDecoder(f)
+		err = dec.Decode(root)
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Println("read from", *in)
 	}
-	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
+
+	if *source != "" {
+		f, err := os.Open(*source)
+		// f, err := os.Open("/usr/share/dict/words")
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer f.Close()
+
+		scanner := bufio.NewScanner(f)
+		var count, words int
+		for scanner.Scan() {
+			b := bytes.ToLower(scanner.Bytes())
+			words++
+			count += len(b)
+			root.Insert(b, nil)
+		}
+		if err := scanner.Err(); err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println("inserted", words, "words", count, "characters")
 	}
-	fmt.Println("inserted", words, "words", count, "characters")
+
+	if *out != "" {
+		var f *os.File
+		_, err := os.Stat(*out)
+		if os.IsNotExist(err) {
+			f, err = os.Create(*out)
+		} else {
+			f, err = os.Open(*out)
+		}
+		if err != nil {
+			log.Fatal(err)
+		}
+		enc := gob.NewEncoder(f)
+		err = enc.Encode(root)
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Println("store to", *out)
+	}
 
 	if *memprofile != "" {
 		memfile, err := os.Create(*memprofile)
