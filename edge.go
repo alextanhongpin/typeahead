@@ -3,14 +3,14 @@ package ahead
 // Edge represents the edge of a node.
 type Edge struct {
 	Count   int
-	Key     []byte
+	Key     string
 	Value   interface{}
 	Node    Node
 	Endword bool
 }
 
 // NewEdge creates a new Edge with the given key value pair.
-func NewEdge(key []byte, value interface{}) Edge {
+func NewEdge(key string, value interface{}) Edge {
 	return Edge{
 		Key:   key,
 		Value: value,

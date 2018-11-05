@@ -1,7 +1,7 @@
 package ahead
 
 import (
-	"bytes"
+	"strings"
 )
 
 // Root represents the root of the radix tree.
@@ -17,20 +17,20 @@ func New() *Root {
 }
 
 // Insert adds a key value pair into the tree.
-func (r *Root) Insert(key []byte, value interface{}) {
+func (r *Root) Insert(key string, value interface{}) {
 	insert(&(r.Node), key, value)
 }
 
 // Find searches for the edge of the node that matches the given prefix.
-func (r *Root) Find(key []byte) map[string]Edge {
+func (r *Root) Find(key string) map[string]Edge {
 	return find(&(r.Node), key)
 }
 
-func (r *Root) FindRecursive(key []byte) [][]byte {
+func (r *Root) FindRecursive(key string) []string {
 	return findRecursive(&(r.Node), key)
 }
 
-func insert(root *Node, key []byte, value interface{}) {
+func insert(root *Node, key string, value interface{}) {
 	if root == nil || len(key) == 0 {
 		return
 	}
@@ -50,7 +50,7 @@ func insert(root *Node, key []byte, value interface{}) {
 		return
 	}
 	currKey := root.Edges[pos].Key
-	if bytes.Equal(currKey, key) {
+	if currKey == key {
 		root.Edges[pos].Count++
 		root.Edges[pos].Endword = true
 		return
@@ -65,11 +65,11 @@ func insert(root *Node, key []byte, value interface{}) {
 	split(root, key, p, pos)
 }
 
-func split(root *Node, key []byte, p, pos int) {
+func split(root *Node, key string, p, pos int) {
 	var rem int
 	edge := root.Edges[pos]
 	for k, v := range root.Edges {
-		if bytes.Equal(v.Key, edge.Key) {
+		if v.Key == edge.Key {
 			rem = k
 			break
 		}
@@ -88,22 +88,26 @@ func split(root *Node, key []byte, p, pos int) {
 	root.Edges = append(root.Edges, newEdge)
 }
 
-func complete(root *Node, orikey []byte) [][]byte {
-	key := make([]byte, len(orikey))
-	copy(key, orikey)
-	out := make([][]byte, 0)
+func complete(root *Node, key string) []string {
+	// key := make(string, len(orikey))
+	// copy(key, orikey)
+	out := make([]string, 0)
+	var sb strings.Builder
 	for _, edge := range root.Edges {
-		newext := append(key, edge.Key...)
+		sb.Reset()
+		sb.WriteString(key)
+		sb.WriteString(edge.Key)
+		str := sb.String()
 		if edge.Endword {
-			out = append(out, newext)
+			out = append(out, str)
 		}
-		res := complete(&(edge.Node), newext)
+		res := complete(&(edge.Node), str)
 		out = append(out, res...)
 	}
 	return out
 }
 
-func findRecursive(root *Node, key []byte) [][]byte {
+func findRecursive(root *Node, key string) []string {
 	if root == nil || len(key) == 0 {
 		return nil
 	}
@@ -112,7 +116,7 @@ func findRecursive(root *Node, key []byte) [][]byte {
 	for traverseNode != nil && !traverseNode.IsLeaf() && foundElements < len(key) {
 		var nextEdge *Edge
 		for _, edge := range traverseNode.Edges {
-			if bytes.HasPrefix(key[foundElements:], edge.Key) {
+			if strings.HasPrefix(key[foundElements:], edge.Key) {
 				nextEdge = &edge
 				break
 			}
@@ -130,7 +134,7 @@ func findRecursive(root *Node, key []byte) [][]byte {
 	return complete(traverseNode, key)
 }
 
-func find(root *Node, in []byte) map[string]Edge {
+func find(root *Node, in string) map[string]Edge {
 	if root == nil || len(in) == 0 {
 		return nil
 	}
@@ -140,20 +144,20 @@ func find(root *Node, in []byte) map[string]Edge {
 	stack = append(stack, NewEdge(in, nil))
 	for len(stack) > 0 {
 		var key Edge
-		var foundKey []byte
+		var foundKey string
 		key, stack = stack[0], stack[1:]
 		if edge, found := result[key.String()]; found && edge.Endword && edge.Node.IsLeaf() {
 			continue
 		}
 		// Need to make a copy of the byte.
-		foundKey = make([]byte, len(key.Key))
-		copy(foundKey, key.Key)
+		// foundKey = make(string, len(key.Key))
+		// copy(foundKey, key.Key)
 		var foundElements int
 		traverseNode := root
-		for traverseNode != nil && !traverseNode.IsLeaf() && foundElements < len(foundKey) {
+		for traverseNode != nil && !traverseNode.IsLeaf() && foundElements < len(key.Key) {
 			var nextEdge *Edge
 			for _, edge := range traverseNode.Edges {
-				if bytes.HasPrefix(foundKey[foundElements:], edge.Key) {
+				if strings.HasPrefix(key.Key[foundElements:], edge.Key) {
 					nextEdge = &edge
 					break
 				}
@@ -168,12 +172,16 @@ func find(root *Node, in []byte) map[string]Edge {
 		if traverseNode == nil || traverseNode.IsLeaf() {
 			continue
 		}
+		var sb strings.Builder
 		for _, edge := range traverseNode.Edges {
-			func(key, edge Edge) {
-				out := append(foundKey, edge.Key...)
-				stack = append([]Edge{NewEdge(out, nil)}, stack...)
-				result[string(out)] = edge
-			}(key, edge)
+			sb.Reset()
+
+			sb.WriteString(foundKey)
+			sb.WriteString(edge.Key)
+			str := sb.String()
+			// out := append(foundKey, edge.Key...)
+			stack = append([]Edge{NewEdge(str, nil)}, stack...)
+			result[str] = edge
 		}
 	}
 
@@ -192,7 +200,7 @@ func min(x, y int) int {
 	return y
 }
 
-func sharedPrefix(s, t []byte) int {
+func sharedPrefix(s, t string) int {
 	minLen := min(len(s), len(t))
 	for i := 0; i < minLen; i++ {
 		if s[i] != t[i] {

@@ -2,13 +2,14 @@ package main
 
 import (
 	"bufio"
-	"bytes"
 	"encoding/gob"
 	"flag"
 	"fmt"
 	"log"
 	"os"
+	"runtime"
 	"runtime/pprof"
+	"strings"
 	"time"
 
 	ahead "github.com/alextanhongpin/go-ahead"
@@ -65,7 +66,8 @@ func main() {
 		scanner := bufio.NewScanner(f)
 		var count, words int
 		for scanner.Scan() {
-			b := bytes.ToLower(scanner.Bytes())
+			// b := bytes.ToLower(scanner.Bytes())
+			b := strings.ToLower(scanner.Text())
 			words++
 			count += len(b)
 			root.Insert(b, nil)
@@ -100,6 +102,9 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
+		// Simulate search.
+		root.FindRecursive("tan")
+		runtime.GC()
 		pprof.WriteHeapProfile(memfile)
 		defer memfile.Close()
 	}
@@ -108,7 +113,7 @@ func main() {
 		fmt.Println("Enter a search keyword:")
 		reader := bufio.NewScanner(os.Stdin)
 		for reader.Scan() {
-			b := bytes.TrimSpace(reader.Bytes())
+			b := strings.TrimSpace(reader.Text())
 			if len(b) == 0 {
 				continue
 			}
