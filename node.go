@@ -7,12 +7,12 @@ import (
 
 // Node holds an array of edge.
 type Node struct {
-	Edges []Edge
+	Edges []*Edge
 }
 
 // NewNode returns a new node value.
-func NewNode() Node {
-	return Node{}
+func NewNode() *Node {
+	return &Node{}
 }
 
 // IsLeaf returns true if the node does not have any edges.

@@ -6,7 +6,7 @@ import (
 
 // Root represents the root of the radix tree.
 type Root struct {
-	Node Node
+	Node *Node
 }
 
 // New returns a new tree.
@@ -18,16 +18,16 @@ func New() *Root {
 
 // Insert adds a key value pair into the tree.
 func (r *Root) Insert(key []byte, value interface{}) {
-	insert(&(r.Node), key, value)
+	insert(r.Node, key, value)
 }
 
 // Find searches for the edge of the node that matches the given prefix.
-func (r *Root) Find(key []byte) map[string]Edge {
-	return find(&(r.Node), key)
+func (r *Root) Find(key []byte) map[string]*Edge {
+	return find(r.Node, key)
 }
 
 func (r *Root) FindRecursive(key []byte) [][]byte {
-	return findRecursive(&(r.Node), key)
+	return findRecursive(r.Node, key)
 }
 
 func insert(root *Node, key []byte, value interface{}) {
@@ -49,17 +49,22 @@ func insert(root *Node, key []byte, value interface{}) {
 		root.Edges = append(root.Edges, edge)
 		return
 	}
-	currKey := root.Edges[pos].Key
+	edge := root.Edges[pos]
+	currKey := edge.Key
+	// currKey := root.Edges[pos].Key
 	if bytes.Equal(currKey, key) {
-		root.Edges[pos].Count++
-		root.Edges[pos].Endword = true
+		edge.Count++
+		edge.Endword = true
+		// root.Edges[pos].Count++
+		// root.Edges[pos].Endword = true
 		return
 	}
 	if len(currKey) == p {
-		root.Edges[pos].Count++
-		node := root.Edges[pos].Node
-		insert(&node, key[p:], value)
-		root.Edges[pos].Node = node
+		edge.Count++
+		// root.Edges[pos].Count++
+		// node := root.Edges[pos].Node
+		insert(edge.Node, key[p:], value)
+		// root.Edges[pos].Node = node
 		return
 	}
 	split(root, key, p, pos)
@@ -75,7 +80,10 @@ func split(root *Node, key []byte, p, pos int) {
 		}
 	}
 	// Pop the old edge.
-	root.Edges = append(root.Edges[:rem], root.Edges[rem+1:]...)
+	// root.Edges = append(root.Edges[:rem], root.Edges[rem+1:]...)
+	copy(root.Edges[rem:], root.Edges[rem+1:])
+	root.Edges[len(root.Edges)-1] = nil
+	root.Edges = root.Edges[:len(root.Edges)-1]
 	prefix, left, right := edge.Key[:p], edge.Key[p:], key[p:]
 
 	newEdge := NewEdge(prefix, nil)
@@ -83,7 +91,7 @@ func split(root *Node, key []byte, p, pos int) {
 
 	edge.Key = left
 
-	insert(&(newEdge.Node), right, nil)
+	insert((newEdge.Node), right, nil)
 	newEdge.Node.Edges = append(newEdge.Node.Edges, edge)
 	root.Edges = append(root.Edges, newEdge)
 }
@@ -97,7 +105,7 @@ func complete(root *Node, orikey []byte) [][]byte {
 		if edge.Endword {
 			out = append(out, newext)
 		}
-		res := complete(&(edge.Node), newext)
+		res := complete((edge.Node), newext)
 		out = append(out, res...)
 	}
 	return out
@@ -113,7 +121,7 @@ func findRecursive(root *Node, key []byte) [][]byte {
 		var nextEdge *Edge
 		for _, edge := range traverseNode.Edges {
 			if bytes.HasPrefix(key[foundElements:], edge.Key) {
-				nextEdge = &edge
+				nextEdge = edge
 				break
 			}
 		}
@@ -122,7 +130,7 @@ func findRecursive(root *Node, key []byte) [][]byte {
 			break
 		}
 		foundElements += len(nextEdge.Key)
-		traverseNode = &(nextEdge.Node)
+		traverseNode = (nextEdge.Node)
 	}
 	if traverseNode == nil || traverseNode.IsLeaf() {
 		return nil
@@ -130,16 +138,16 @@ func findRecursive(root *Node, key []byte) [][]byte {
 	return complete(traverseNode, key)
 }
 
-func find(root *Node, in []byte) map[string]Edge {
+func find(root *Node, in []byte) map[string]*Edge {
 	if root == nil || len(in) == 0 {
 		return nil
 	}
-	result := make(map[string]Edge)
+	result := make(map[string]*Edge)
 
-	var stack []Edge
+	var stack []*Edge
 	stack = append(stack, NewEdge(in, nil))
 	for len(stack) > 0 {
-		var key Edge
+		var key *Edge
 		var foundKey []byte
 		key, stack = stack[0], stack[1:]
 		if edge, found := result[key.String()]; found && edge.Endword && edge.Node.IsLeaf() {
@@ -154,7 +162,7 @@ func find(root *Node, in []byte) map[string]Edge {
 			var nextEdge *Edge
 			for _, edge := range traverseNode.Edges {
 				if bytes.HasPrefix(foundKey[foundElements:], edge.Key) {
-					nextEdge = &edge
+					nextEdge = edge
 					break
 				}
 			}
@@ -163,15 +171,15 @@ func find(root *Node, in []byte) map[string]Edge {
 				break
 			}
 			foundElements += len(nextEdge.Key)
-			traverseNode = &(nextEdge.Node)
+			traverseNode = (nextEdge.Node)
 		}
 		if traverseNode == nil || traverseNode.IsLeaf() {
 			continue
 		}
 		for _, edge := range traverseNode.Edges {
-			func(key, edge Edge) {
+			func(key, edge *Edge) {
 				out := append(foundKey, edge.Key...)
-				stack = append([]Edge{NewEdge(out, nil)}, stack...)
+				stack = append([]*Edge{NewEdge(out, nil)}, stack...)
 				result[string(out)] = edge
 			}(key, edge)
 		}
