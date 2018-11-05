@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"runtime"
 	"runtime/pprof"
 	"time"
 
@@ -100,6 +101,8 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
+		root.FindRecursive([]byte("john"))
+		runtime.GC()
 		pprof.WriteHeapProfile(memfile)
 		defer memfile.Close()
 	}
