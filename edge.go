@@ -1,4 +1,4 @@
-package ahead
+package typeahead
 
 // Edge represents the edge of a node.
 type Edge struct {

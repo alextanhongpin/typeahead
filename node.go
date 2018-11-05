@@ -1,4 +1,4 @@
-package ahead
+package typeahead
 
 import (
 	"fmt"

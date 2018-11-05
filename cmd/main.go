@@ -12,7 +12,7 @@ import (
 	"runtime/pprof"
 	"time"
 
-	ahead "github.com/alextanhongpin/go-ahead"
+	typeahead "github.com/alextanhongpin/go-typeahead"
 )
 
 func main() {
@@ -34,7 +34,7 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	root := ahead.New()
+	root := typeahead.New()
 
 	if *in != "" {
 		var f *os.File
