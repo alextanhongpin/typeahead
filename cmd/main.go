@@ -10,6 +10,7 @@ import (
 	"os"
 	"runtime"
 	"runtime/pprof"
+	"strings"
 	"time"
 
 	typeahead "github.com/alextanhongpin/go-typeahead"
@@ -35,7 +36,8 @@ func main() {
 	}
 
 	root := typeahead.New()
-	var trie *typeahead.Trie
+	// var trie *typeahead.Trie
+	radix := typeahead.NewTrieNode("^")
 
 	if *in != "" {
 		var f *os.File
@@ -71,7 +73,12 @@ func main() {
 			words++
 			count += len(b)
 			root.Insert(b, nil)
-			trie = typeahead.TrieInsert(trie, scanner.Text())
+
+			// Test trie.
+			// trie = typeahead.TrieInsert(trie, scanner.Text())
+
+			// Test radix trie.
+			radix.Add(strings.ToLower(scanner.Text()))
 		}
 		if err := scanner.Err(); err != nil {
 			log.Fatal(err)
@@ -132,7 +139,12 @@ func main() {
 				count++
 			}
 			fmt.Printf("found %d results in %s\n", count, time.Since(start))
-			fmt.Println("trie contains", typeahead.TrieContains(trie, reader.Text()))
+			// fmt.Println("trie contains", typeahead.TrieContains(trie, reader.Text()))
+			radixResult := radix.Search(reader.Text())
+			fmt.Printf("found %d results in", len(radixResult))
+			for _, r := range radixResult {
+				fmt.Println(r)
+			}
 			fmt.Println()
 		}
 		if err := reader.Err(); err != nil {

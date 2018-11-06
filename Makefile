@@ -4,7 +4,7 @@ start:
 
 prof:
 	# go run cmd/main.go -cpu=profiling/$(VERSION)_cpu.out -mem=profiling/$(VERSION)_mem.out -i -in dict.gob
-	go run cmd/main.go -cpu=profiling/$(VERSION)_cpu.out -mem=profiling/$(VERSION)_mem.out -i -source ./words.txt
+	go run cmd/main.go -cpu=profiling/$(VERSION)_cpu.out -mem=profiling/$(VERSION)_mem.out -i -source /usr/share/dict/words
 
 dictionary:
 	curl -o words.txt https://raw.githubusercontent.com/dwyl/english-words/master/words.txt
