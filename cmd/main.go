@@ -35,6 +35,7 @@ func main() {
 	}
 
 	root := typeahead.New()
+	var trie *typeahead.Trie
 
 	if *in != "" {
 		var f *os.File
@@ -70,6 +71,7 @@ func main() {
 			words++
 			count += len(b)
 			root.Insert(b, nil)
+			trie = typeahead.TrieInsert(trie, scanner.Text())
 		}
 		if err := scanner.Err(); err != nil {
 			log.Fatal(err)
@@ -130,6 +132,7 @@ func main() {
 				count++
 			}
 			fmt.Printf("found %d results in %s\n", count, time.Since(start))
+			fmt.Println("trie contains", typeahead.TrieContains(trie, reader.Text()))
 			fmt.Println()
 		}
 		if err := reader.Err(); err != nil {
