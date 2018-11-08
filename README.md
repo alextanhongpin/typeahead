@@ -1,4 +1,7 @@
 # go-ahead
+
+[![](https://godoc.org/github.com/alextanhongpin/go-typeahead?status.svg)](https://godoc.org/github.com/alextanhongpin/go-typeahead)
+
 A text autocompleter with golang. The goal is to create a google-like
   autocomplete. Based on some research done, it seems like google is
   implementing it using radix/patricia tree. The implementation here is
