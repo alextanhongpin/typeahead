@@ -1,6 +1,6 @@
 # go-ahead
 
-[![](https://godoc.org/github.com/alextanhongpin/go-typeahead?status.svg)](https://godoc.org/github.com/alextanhongpin/go-typeahead)
+[![](https://godoc.org/github.com/alextanhongpin/typeahead?status.svg)](https://godoc.org/github.com/alextanhongpin/typeahead)
 
 A text autocompleter with golang. The goal is to create a google-like
   autocomplete. Based on some research done, it seems like google is
