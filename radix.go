@@ -53,6 +53,8 @@ func (n *TrieNode) String() string {
 	return fmt.Sprintf("%s:%d", n.key, n.count)
 
 }
+
+// Print prints the whole tree.
 func (n *TrieNode) Print(i int) {
 	for _, child := range n.children {
 		fmt.Printf("%*s %s\n", i*2, "", child)

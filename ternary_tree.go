@@ -1,38 +1,32 @@
 package typeahead
 
-package main
-
-import (
-	"fmt"
-)
-
 // REFERENCES:
 // https://www.cs.upc.edu/~ps/downloads/tst/tst.html
 // http://hacktalks.blogspot.com/2012/03/implementing-auto-complete-with-ternary.html
 // https://www.javaworld.com/article/2075027/java-app-dev/plant-your-data-in-a-ternary-search-tree.html?page=2
 // http://www.drdobbs.com/database/ternary-search-trees/184410528?pgno=3
-func main() {
-	tree := NewTernaryTree()
-	tree.Add("hello")
-	tree.Add("dobby")
-	tree.Add("debby")
-	tree.Add("dobbs")
-	tree.Add("hells")
-	tree.Add("helrs")
-	tree.Add("helrs")
-	tree.Add("helsinki")
-	tree.Add("hobby")
-	tree.Add("sell")
-	tree.Add("hallo")
-	tree.Add("anglo")
-	tree.Add("hi")
-	tree.Add("car")
-	fmt.Println("has hello:", tree.Contains("dobby"))
-	result := tree.Search("he")
-	fmt.Println(result)
-	fmt.Println(tree.Traverse())
-	tree.NearSearch("dobbs")
-}
+// func main() {
+//         tree := NewTernaryTree()
+//         tree.Add("hello")
+//         tree.Add("dobby")
+//         tree.Add("debby")
+//         tree.Add("dobbs")
+//         tree.Add("hells")
+//         tree.Add("helrs")
+//         tree.Add("helrs")
+//         tree.Add("helsinki")
+//         tree.Add("hobby")
+//         tree.Add("sell")
+//         tree.Add("hallo")
+//         tree.Add("anglo")
+//         tree.Add("hi")
+//         tree.Add("car")
+//         fmt.Println("has hello:", tree.Contains("dobby"))
+//         result := tree.Search("he")
+//         fmt.Println(result)
+//         fmt.Println(tree.Traverse())
+//         tree.NearSearch("dobbs")
+// }
 
 type TernaryNode struct {
 	char    rune

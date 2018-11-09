@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	typeahead "github.com/alextanhongpin/go-typeahead"
+	"github.com/alextanhongpin/typeahead"
 )
 
 func main() {
