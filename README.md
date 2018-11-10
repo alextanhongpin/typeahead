@@ -11,6 +11,11 @@ Radix tree is more storage efficient than a trie (?).
 
 Another interesting implementation is the _typeahead_ by Facebook.
 
+## Installation
+
+```bash
+$ go get github.com/alextanhongpin/typeahead
+```
 
 ## TODO
 
