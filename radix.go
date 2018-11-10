@@ -158,72 +158,60 @@ func (n *TrieNode) Add(key string) {
 }
 
 func (n *TrieNode) Search(key string) []string {
-	var matches int
-	var str strings.Builder
-	table := make(map[string]struct{})
+
 	node := n
-outer:
-	for {
-		var i int
+
+	var elementsFound int
+	for node != nil && !node.IsLeaf() && elementsFound < len(key) {
 		var child *TrieNode
-		if node.IsLeaf() && node.key != key {
-			break outer
-		}
+		// Look through each children for keys with similar prefx.
 		for _, child = range node.children {
-			if i = matchPrefix(child.key, key); i == -1 {
+			if matchPrefix(child.key, key) == -1 {
 				continue
 			}
+		}
+		// No children found, break
+		if child == nil {
 			break
 		}
-		if i == -1 {
-			break outer
-		}
-		if strings.EqualFold(key, child.key) {
-			str.WriteString(key)
-			s := str.String()
+		elementsFound += 1 + matchPrefix(child.key, key)
+		node = child
+	}
+	var sb strings.Builder
 
-			var head *TrieNode
-			queue := []*TrieNode{child}
-			for len(queue) > 0 {
-				head, queue = queue[0], queue[1:]
-				if len(head.children) == 0 {
-					str.Reset()
-					str.WriteString(s)
-					str.WriteString(head.key[i+1:])
-					// result = append(result, str.String())
-					table[str.String()] = struct{}{}
-				}
-				for _, c := range head.children {
-					c.key = head.key + c.key
-					// Important to include those with endword too.
-					if c.endword {
-						str.Reset()
-						str.WriteString(s)
-						str.WriteString(c.key[i+1:])
-						// result = append(result, str.String())
-						table[str.String()] = struct{}{}
-					}
-					queue = append(queue, c)
-				}
-			}
-			break outer
+	result := make(map[string]struct{})
+
+	var queue []*TrieNode = node.children
+	tmp := make([]string, len(queue))
+	for i, q := range queue {
+		sb.Reset()
+		sb.WriteString(key)
+		sb.WriteString(q.key)
+		tmp[i] = sb.String()
+	}
+	var head *TrieNode
+	var t string
+	for len(queue) > 0 {
+		head, queue = queue[0], queue[1:]
+		t, tmp = tmp[0], tmp[1:]
+		sb.Reset()
+		sb.WriteString(t)
+		sb.WriteString(head.key)
+		if head.endword {
+			result[sb.String()] = struct{}{}
 		}
-		if strings.Contains(key, child.key) {
-			node = child
-			matches += len(child.key)
-			str.WriteString(child.key)
-			key = key[i+1:]
-		} else {
-			break outer
+		for _, child := range head.children {
+			queue = append(queue, child)
+			tmp = append(tmp, sb.String())
 		}
 	}
-	result := make([]string, len(table))
+	out := make([]string, len(result))
 	var i int
-	for r := range table {
-		result[i] = r
+	for s := range result {
+		out[i] = s
 		i++
 	}
-	return result
+	return out
 }
 
 // matchPrefix will return -1 if the prefix does not match.
