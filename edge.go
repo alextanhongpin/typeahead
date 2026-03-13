@@ -4,13 +4,13 @@ package typeahead
 type Edge struct {
 	Count   int
 	Key     []byte
-	Value   interface{}
+	Value   any
 	Node    Node
 	Endword bool
 }
 
 // NewEdge creates a new Edge with the given key value pair.
-func NewEdge(key []byte, value interface{}) Edge {
+func NewEdge(key []byte, value any) Edge {
 	return Edge{
 		Key:   key,
 		Value: value,

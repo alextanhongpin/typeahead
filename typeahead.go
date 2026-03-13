@@ -17,7 +17,7 @@ func New() *Root {
 }
 
 // Insert adds a key value pair into the tree.
-func (r *Root) Insert(key []byte, value interface{}) {
+func (r *Root) Insert(key []byte, value any) {
 	insert(&(r.Node), key, value)
 }
 
@@ -30,7 +30,7 @@ func (r *Root) FindRecursive(key []byte) [][]byte {
 	return findRecursive(&(r.Node), key)
 }
 
-func insert(root *Node, key []byte, value interface{}) {
+func insert(root *Node, key []byte, value any) {
 	if root == nil || len(key) == 0 {
 		return
 	}
@@ -185,16 +185,9 @@ func find(root *Node, in []byte) map[string]Edge {
 	return result
 }
 
-func min(x, y int) int {
-	if x < y {
-		return x
-	}
-	return y
-}
-
 func sharedPrefix(s, t []byte) int {
 	minLen := min(len(s), len(t))
-	for i := 0; i < minLen; i++ {
+	for i := range minLen {
 		if s[i] != t[i] {
 			return i
 		}

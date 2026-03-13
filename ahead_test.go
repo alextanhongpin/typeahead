@@ -15,11 +15,11 @@ func TestRadix(t *testing.T) {
 		out := find(&root, in[:len(in)/2])
 		if len(out) != 1 {
 			fmt.Println(string(in), len(out), "search", string(in[:len(in)/2]))
-			fmt.Println(string(root.edges[0].key))
+			fmt.Println(string(root.Edges[0].Key))
 			return false
 		}
 		for _, v := range out {
-			if ok := bytes.Equal(in, v.key); !ok {
+			if ok := bytes.Equal(in, v.Key); !ok {
 				fmt.Println(string(in))
 				return false
 			}
